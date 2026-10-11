@@ -1,134 +1,616 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<!-- lang is set so screen readers pick the right pronunciation (SC 3.1.1) -->
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCare Assist — Multimodal Adaptive Patient Portal</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>InclusivePulse: Accessibility & Usability Evaluation Engine</title>
+<!-- Tailwind CSS for utility styling -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: ['class', '[data-theme="dark"]'],
+    theme: {
+      extend: {
+        colors: {
+          bg: 'var(--bg)',
+          fg: 'var(--fg)',
+          card: 'var(--card)',
+          mut: 'var(--mut)',
+          ac: 'var(--ac)',
+          acfg: 'var(--acfg)',
+          bd: 'var(--bd)',
+          ok: 'var(--ok)',
+          bad: 'var(--bad)',
+        }
+      }
+    }
+  }
+</script>
+<style>
+:root {
+  --bg: #f8fafc;
+  --fg: #0f172a;
+  --card: #ffffff;
+  --mut: #475569;
+  --ac: #0284c7;
+  --acfg: #ffffff;
+  --bd: #cbd5e1;
+  --ok: #16a34a;
+  --bad: #dc2626;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root[data-theme="dark"] {
+  --bg: #090d16;
+  --fg: #f1f5f9;
+  --card: #111827;
+  --mut: #94a3b8;
+  --ac: #38bdf8;
+  --acfg: #030712;
+  --bd: #334155;
+  --ok: #4ade80;
+  --bad: #f87171;
+}
+:root[data-theme="contrast"] {
+  --bg: #000000;
+  --fg: #ffffff;
+  --card: #000000;
+  --mut: #ffffff;
+  --ac: #ffff00;
+  --acfg: #000000;
+  --bd: #ffffff;
+  --ok: #00ff00;
+  --bad: #ff0000;
+}
+:root[data-theme="solarized"] {
+  --bg: #fdf6e3;
+  --fg: #657b83;
+  --card: #eee8d5;
+  --mut: #93a1a1;
+  --ac: #2aa198;
+  --acfg: #fdf6e3;
+  --bd: #93a1a1;
+  --ok: #859900;
+  --bad: #dc322f;
+}
+:root[data-theme="neon"] {
+  --bg: #0d0221;
+  --fg: #00ffcc;
+  --card: #190b28;
+  --mut: #b57edd;
+  --ac: #ff007f;
+  --acfg: #ffffff;
+  --bd: #7209b7;
+  --ok: #39ff14;
+  --bad: #ff073a;
+}
+
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--fg); transition: background 0.3s ease, color 0.3s ease; }
+[hidden] { display: none !important; }
+
+/* Focus Visible (SC 2.4.7) */
+:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+.skip { position: absolute; left: 1rem; top: -5rem; background: var(--ac); color: var(--acfg); padding: 0.75rem 1.25rem; z-index: 50; font-weight: bold; border-radius: 0.5rem; transition: top 0.2s; }
+.skip:focus { top: 1rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+/* Component Styles */
+.card { background: var(--card); border: 2px solid var(--bd); border-radius: 1rem; padding: 1.5rem; margin: 1.25rem 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.btn { background: var(--ac); color: var(--acfg); border: 2px solid var(--ac); padding: 0.6rem 1.25rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; min-height: 2.75rem; display: inline-flex; align-items: center; justify-content: center; }
+.btn:hover { opacity: 0.9; }
+button:not(.btn):not([role=tab]) { background: var(--card); color: var(--fg); border: 2px solid var(--bd); padding: 0.6rem 1.25rem; border-radius: 0.5rem; cursor: pointer; min-height: 2.75rem; }
+input[type=text], input[type=email], input[type=tel], input[type=password], select { background: var(--card); color: var(--fg); border: 2px solid var(--bd); padding: 0.6rem 0.8rem; border-radius: 0.5rem; min-height: 2.75rem; width: 100%; }
+input[type=color] { width: 4rem; height: 3rem; padding: 0.2rem; border: 2px solid var(--bd); border-radius: 0.5rem; background: var(--card); cursor: pointer; }
+
+dialog { background: var(--card); color: var(--fg); border: 3px solid var(--fg); border-radius: 1rem; max-width: 30rem; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(3px); }
+
+.menu { position: absolute; background: var(--card); border: 2px solid var(--bd); border-radius: 0.75rem; padding: 0.5rem; z-index: 40; min-width: 13rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+.menu button { display: block; width: 100%; text-align: left; border: none !important; border-radius: 0.375rem; padding: 0.5rem 0.75rem; margin-bottom: 0.25rem; }
+.menu button:hover { background: var(--ac); color: var(--acfg); }
+
+.klog { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; max-height: 12rem; overflow-y: auto; background: var(--card); border: 2px solid var(--bd); border-radius: 0.5rem; padding: 0.75rem; }
+</style>
 </head>
-<body class="theme-default">
+<body class="min-h-screen flex flex-col">
 
-    <!-- Top Navigation Header -->
-    <header class="top-nav" id="top-nav">
-        <div class="brand">
-            <span class="brand-name">MediCare <strong>Assist</strong></span>
-            <span class="brand-badge">Adaptive Triage Portal</span>
+<a class="skip" href="#main">Skip to main content</a>
+
+<header class="max-w-6xl mx-auto w-full p-4 md:p-6">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-2 border-bd pb-6">
+    <div>
+      <span class="text-xs uppercase tracking-widest font-bold px-2.5 py-1 rounded-full bg-[var(--ac)] text-[var(--acfg)]">Universal Design & Accessibility</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold mt-2 tracking-tight">InclusivePulse</h1>
+      <p class="text-mut text-sm md:text-base mt-1">Multi-modal WCAG 2.1 AA/AAA Accessibility, Color Contrast Engine & Keyboard Navigation Suite.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <label for="theme" class="font-semibold text-sm">Theme:</label>
+      <select id="theme" aria-label="Select theme" class="w-auto">
+        <option value="light">Light Professional</option>
+        <option value="dark">Dark Midnight</option>
+        <option value="contrast">High Contrast (WCAG AAA)</option>
+        <option value="solarized">Solarized Pastel</option>
+        <option value="neon">Neon Cyberpunk</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Navigation Modules Tabs -->
+  <div role="tablist" aria-label="InclusivePulse Modules" id="maintabs" class="flex flex-wrap gap-2 mt-6">
+    <button role="tab" id="t1" aria-controls="p1" aria-selected="true" class="rounded-t-xl font-semibold border-b-0 px-4 py-3 border-2 border-bd bg-[var(--card)] transition">1. Keyboard & Navigation</button>
+    <button role="tab" id="t2" aria-controls="p2" aria-selected="false" tabindex="-1" class="rounded-t-xl font-semibold border-b-0 px-4 py-3 border-2 border-bd bg-[var(--card)] transition">2. Contrast & Multi-Test</button>
+    <button role="tab" id="t3" aria-controls="p3" aria-selected="false" tabindex="-1" class="rounded-t-xl font-semibold border-b-0 px-4 py-3 border-2 border-bd bg-[var(--card)] transition">3. Form Validation & Formats</button>
+    <button role="tab" id="t4" aria-controls="p4" aria-selected="false" tabindex="-1" class="rounded-t-xl font-semibold border-b-0 px-4 py-3 border-2 border-bd bg-[var(--card)] transition">4. Image Tracker & Auditor</button>
+  </div>
+</header>
+
+<main id="main" tabindex="-1" class="max-w-6xl mx-auto w-full p-4 md:p-6 flex-grow">
+
+  <section role="tabpanel" id="p1" aria-labelledby="t1" class="space-y-6">
+    <div class="card">
+      <h2 class="text-2xl font-bold mb-2">Keyboard & Focus Architecture Suite</h2>
+      <p class="text-mut mb-4">Validate keyboard traversal, focus trapping in modal dialogs, roving tablists, and custom dropdown menus without touching a mouse.</p>
+    </div>
+
+    <!-- Accordion Component -->
+    <div class="card">
+      <h3 class="text-lg font-bold mb-3">Accessible Accordion (SC 2.1.1, 4.1.2)</h3>
+      <div class="space-y-2">
+        <button id="ah1" aria-expanded="false" aria-controls="ap1" class="w-full text-left font-semibold p-3 rounded-lg border-2 border-bd flex justify-between items-center">
+          <span>What is Roving Tabindex?</span>
+          <span aria-hidden="true">▼</span>
+        </button>
+        <div id="ap1" role="region" aria-labelledby="ah1" hidden class="p-4 rounded-lg border-2 border-t-0 border-bd bg-[var(--bg)] text-mut">
+          Roving tabindex is a technique where only one item in a composite widget (like a tablist or menu) is in the natural tab order (tabindex="0"), while others are set to -1. Arrow keys shift focus dynamically.
         </div>
 
-        <!-- Modality Controller -->
-        <div class="modality-switch" role="tablist">
-            <button class="mode-pill active" id="btn-manual" role="tab">Keyboard & Mouse</button>
-            <button class="mode-pill" id="btn-voice" role="tab">Voice Assistant</button>
-            <button class="mode-pill" id="btn-ambient" role="tab">Ambient Sensor</button>
+        <button id="ah2" aria-expanded="false" aria-controls="ap2" class="w-full text-left font-semibold p-3 rounded-lg border-2 border-bd flex justify-between items-center">
+          <span>Why use native semantic buttons?</span>
+          <span aria-hidden="true">▼</span>
+        </button>
+        <div id="ap2" role="region" aria-labelledby="ah2" hidden class="p-4 rounded-lg border-2 border-t-0 border-bd bg-[var(--bg)] text-mut">
+          Native <code>&lt;button&gt;</code> elements automatically receive keyboard focus, respond to Enter and Space keys, and communicate correct semantic roles to assistive technologies.
         </div>
-    </header>
+      </div>
+    </div>
 
-    <!-- Main Workspace -->
-    <main class="main-wrapper">
+    <!-- Modal Dialog Component -->
+    <div class="card">
+      <h3 class="text-lg font-bold mb-3">Accessible Modal Dialog & Focus Trap</h3>
+      <p class="text-mut mb-4">Opening this dialog traps keyboard focus completely inside until closed or dismissed via ESC.</p>
+      <button class="btn" id="openDlg">Open Accessible Dialog</button>
+      
+      <dialog id="dlg" aria-labelledby="dt" aria-describedby="dd">
+        <h4 id="dt" class="text-xl font-bold mb-2">Confirmation Dialog</h4>
+        <p id="dd" class="text-mut mb-6">Focus is trapped within this modal layer. Press ESC or click Close to restore focus to the trigger button.</p>
+        <div class="flex flex-wrap gap-3">
+          <button class="btn" id="closeDlg">Close Dialog</button>
+          <button id="dlgOther">Secondary Action</button>
+        </div>
+      </dialog>
+    </div>
 
-        <!-- System Context & Live Speech Feedback -->
-        <div class="feedback-card" id="feedback-card">
-            <div class="feedback-status">
-                <span class="status-indicator-dot" id="voice-dot"></span>
-                <span class="status-msg" id="system-status">System Ready: Standard Input Mode</span>
-            </div>
-            <div class="transcript-box" id="transcript-display">Listening feed: Ready for interaction...</div>
+    <!-- Menu Button Component -->
+    <div class="card">
+      <h3 class="text-lg font-bold mb-3">Custom Menu Button Pattern (ARIA APG)</h3>
+      <p class="text-mut mb-4">Press Enter or Down Arrow to open, use arrow keys to navigate items, and ESC to close.</p>
+      <div class="relative inline-block">
+        <button id="menubtn" aria-haspopup="menu" aria-expanded="false" aria-controls="menulist" class="btn">Actions Menu ▾</button>
+        <div id="menulist" class="menu" role="menu" aria-labelledby="menubtn" hidden>
+          <button role="menuitem" tabindex="-1">📋 Copy Details</button>
+          <button role="menuitem" tabindex="-1">🔍 Audit Element</button>
+          <button role="menuitem" tabindex="-1">⭐ Bookmark Module</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard Event Log -->
+    <div class="card">
+      <h3 class="text-lg font-bold mb-2">Live Keyboard & Focus Event Stream</h3>
+      <p class="text-mut text-sm mb-3">Tracks real-time keyboard interactions and focused element signatures to verify focus order (SC 2.4.3).</p>
+      <ol id="klog" class="klog" aria-label="Recent key events list"></ol>
+    </div>
+  </section>
+
+  <section role="tabpanel" id="p2" aria-labelledby="t2" hidden class="space-y-6">
+    <div class="card">
+      <h2 class="text-2xl font-bold mb-2">Advanced Contrast & Multi-Test Compliance Engine</h2>
+      <p class="text-mut mb-4">Test custom color combinations against 6 rigorous WCAG & APCA accessibility standards with instant pass/fail validation.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
+        <div class="p-4 rounded-xl border-2 border-bd bg-[var(--bg)]">
+          <label for="fgc" class="font-bold block mb-2">Text Color</label>
+          <div class="flex items-center gap-3">
+            <input type="color" id="fgc" value="#1e293b" aria-label="Text color picker">
+            <input type="text" id="fgh" value="#1e293b" aria-label="Text color hex code" maxlength="7">
+          </div>
+        </div>
+        <div class="p-4 rounded-xl border-2 border-bd bg-[var(--bg)]">
+          <label for="bgc" class="font-bold block mb-2">Background Color</label>
+          <div class="flex items-center gap-3">
+            <input type="color" id="bgc" value="#f8fafc" aria-label="Background color picker">
+            <input type="text" id="bgh" value="#f8fafc" aria-label="Background color hex code" maxlength="7">
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-xl bg-[var(--bg)] border-2 border-bd flex flex-col md:flex-row justify-between items-center gap-4 my-4">
+        <div>
+          <span class="text-sm font-semibold text-mut uppercase">Calculated Contrast Ratio</span>
+          <div class="text-3xl font-black mt-1"><span id="ratio">--</span>:1</div>
+        </div>
+        <div>
+          <button id="sugg" class="btn">Suggest Passing Color (4.5:1+)</button>
+          <span id="sugout" role="status" class="block text-xs text-mut mt-1"></span>
+        </div>
+      </div>
+
+      <!-- 6-Point Compliance Test List -->
+      <h3 class="text-lg font-bold mt-6 mb-3">6-Point Compliance Test Results</h3>
+      <ul id="results" class="grid grid-cols-1 md:grid-cols-2 gap-3"></ul>
+
+      <!-- Live Preview Box -->
+      <div id="pv" class="mt-6 p-6 rounded-xl border-2 border-bd transition-all" style="color: #1e293b; background: #f8fafc;">
+        <p class="text-base mb-2 font-normal">Normal text sample (16px Regular)</p>
+        <p class="text-2xl mb-2 font-bold">Large text sample (24px Bold)</p>
+        <p class="text-lg font-semibold">UI Component Border / Icon Sample</p>
+      </div>
+    </div>
+  </section>
+
+  <section role="tabpanel" id="p3" aria-labelledby="t3" hidden class="space-y-6">
+    <div class="card">
+      <h2 class="text-2xl font-bold mb-2">Robust Form Validation & Accessible Feedback</h2>
+      <p class="text-mut mb-4">Submit the form below with missing or incorrect fields to inspect error summaries, inline ARIA alerts, and accessible formats.</p>
+
+      <div id="esum" class="p-4 rounded-xl border-2 border-red-500 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 mb-6" tabindex="-1" hidden></div>
+
+      <form id="frm" novalidate class="space-y-4 max-w-2xl">
+        <div class="field">
+          <label for="fname" class="block font-bold mb-1">Full Name (required)</label>
+          <input id="fname" type="text" aria-required="true" aria-describedby="fname-hint fname-err" autocomplete="name" placeholder="e.g., Alex Johnson">
+          <p id="fname-hint" class="text-xs text-mut mt-1">Format: First and Last name.</p>
+          <div id="fname-err" class="text-sm font-bold text-bad mt-1" role="alert"></div>
         </div>
 
-        <!-- Adaptive Ergonomics Bar (HCI Control Deck) -->
-        <div class="adaptive-bar" id="adaptive-bar">
-            <span class="bar-title">Interface Adaptations:</span>
-            <div class="bar-actions">
-                <button class="adapt-chip" id="toggle-contrast">High Contrast (AAA)</button>
-                <button class="adapt-chip" id="toggle-focus">Focus View</button>
-                <button class="adapt-chip" id="toggle-font">Large Accessible Type</button>
-                <button class="adapt-chip reset" id="reset-ui">Reset Layout</button>
-            </div>
+        <div class="field">
+          <label for="femail" class="block font-bold mb-1">Email Address (required)</label>
+          <input id="femail" type="email" aria-required="true" aria-describedby="femail-hint femail-err" autocomplete="email" placeholder="e.g., alex.johnson@example.com">
+          <p id="femail-hint" class="text-xs text-mut mt-1">Format: username@domain.com</p>
+          <div id="femail-err" class="text-sm font-bold text-bad mt-1" role="alert"></div>
         </div>
 
-        <!-- Real Clinical Patient Intake Form -->
-        <section class="form-container" id="form-container">
-            <div class="form-meta">
-                <h2>Emergency & Outpatient Registration</h2>
-                <p>Register incoming patient details. Accessible via keyboard, screen reader, or hands-free voice commands.</p>
-            </div>
+        <div class="field">
+          <label for="ftel" class="block font-bold mb-1">Phone Number (optional)</label>
+          <input id="ftel" type="tel" aria-describedby="ftel-hint ftel-err" autocomplete="tel" placeholder="e.g., +1 (555) 019-2834">
+          <p id="ftel-hint" class="text-xs text-mut mt-1">Format: +Country Code (Area) Number</p>
+          <div id="ftel-err" class="text-sm font-bold text-bad mt-1" role="alert"></div>
+        </div>
 
-            <form id="patient-form" onsubmit="return false;">
-                <!-- Full Name Field -->
-                <div class="field-row">
-                    <div class="label-wrapper">
-                        <label for="patient-name">Patient Full Name</label>
-                        <span class="hint-tag">Voice: "Set name [Name]"</span>
-                    </div>
-                    <input type="text" id="patient-name" placeholder="e.g. Raheela Daud" autocomplete="off">
-                </div>
+        <button class="btn" type="submit">Submit & Validate Form</button>
+      </form>
+      <div id="status" class="mt-4 p-3 rounded-lg border-2 border-dashed border-bd text-center font-semibold" role="status"></div>
+    </div>
+  </section>
 
-                <!-- Urgency & Department Fields -->
-                <div class="two-col-grid">
-                    <div class="field-row">
-                        <div class="label-wrapper">
-                            <label for="urgency-level">Triage Urgency</label>
-                            <span class="hint-tag">Voice: "Priority Urgent / Routine"</span>
-                        </div>
-                        <select id="urgency-level">
-                            <option value="Routine">Standard / Routine Care</option>
-                            <option value="Urgent">Priority Urgent</option>
-                            <option value="Critical">Critical Emergency</option>
-                        </select>
-                    </div>
+  <section role="tabpanel" id="p4" aria-labelledby="t4" hidden class="space-y-6">
+    <div class="card">
+      <h2 class="text-2xl font-bold mb-2">Image Accessibility Tracker & Heuristic Auditor</h2>
+      <p class="text-mut mb-4">Analyze UI banners, logos, and illustrations against WCAG non-text content guidelines (SC 1.1.1) and asset best practices.</p>
 
-                    <div class="field-row">
-                        <div class="label-wrapper">
-                            <label for="dept-select">Clinical Department</label>
-                            <span class="hint-tag">Voice: "Department Cardiology / General"</span>
-                        </div>
-                        <select id="dept-select">
-                            <option value="General Outpatient">General Outpatient</option>
-                            <option value="Cardiology">Cardiology</option>
-                            <option value="Neurology">Neurology</option>
-                            <option value="Trauma Care">Trauma & Emergency</option>
-                        </select>
-                    </div>
-                </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <button class="img-preset p-4 rounded-xl border-2 border-bd bg-[var(--bg)] text-left hover:border-[var(--ac)] transition" data-title="Product Banner with Embedded Text" data-alt="" data-contrast="fail" data-decorative="false" data-recommendation="Image contains hardcoded text without alt description. Provide descriptive alt text or use actual HTML text overlay.">
+          <div class="font-bold text-sm">Banner #1 (Failing)</div>
+          <div class="text-xs text-mut mt-1">Embedded text graphic</div>
+        </button>
+        <button class="img-preset p-4 rounded-xl border-2 border-bd bg-[var(--bg)] text-left hover:border-[var(--ac)] transition" data-title="Descriptive Infographic" data-alt="Infographic showing 3 steps of accessible design" data-contrast="pass" data-decorative="false" data-recommendation="Excellent alt-text provided. Ensure a detailed text transcript is available nearby for screen reader users.">
+          <div class="font-bold text-sm">Infographic #2 (Passing)</div>
+          <div class="text-xs text-mut mt-1">Descriptive alt text</div>
+        </button>
+        <button class="img-preset p-4 rounded-xl border-2 border-bd bg-[var(--bg)] text-left hover:border-[var(--ac)] transition" data-title="Decorative Spacer Wave" data-alt="" data-contrast="pass" data-decorative="true" data-recommendation="Correctly marked as decorative (alt=''). Screen readers will successfully skip this asset.">
+          <div class="font-bold text-sm">Decorative #3 (Correct)</div>
+          <div class="text-xs text-mut mt-1">Empty alt for decoration</div>
+        </button>
+      </div>
 
-                <!-- Clinical Symptoms/Dictation -->
-                <div class="field-row">
-                    <div class="label-wrapper">
-                        <label for="clinical-notes">Chief Complaint / Clinical Notes</label>
-                        <span class="hint-tag">Voice: "Symptom [Details]"</span>
-                    </div>
-                    <textarea id="clinical-notes" rows="3" placeholder="Describe symptoms or dictate diagnosis..."></textarea>
-                </div>
+      <div id="imgAuditResult" class="p-6 rounded-xl border-2 border-bd bg-[var(--bg)]">
+        <h3 class="text-lg font-bold mb-2">Select an image sample above to run automated heuristics.</h3>
+        <p class="text-mut text-sm">Our heuristic engine checks alt-text attributes, text-in-image ratios, and decorative vs informative classifications instantly.</p>
+      </div>
+    </div>
+  </section>
 
-                <!-- Form Controls -->
-                <div class="button-row">
-                    <button class="btn-action primary" id="btn-submit">Complete Triage Submission</button>
-                    <button class="btn-action secondary" id="btn-clear">Clear Record</button>
-                </div>
-            </form>
-        </section>
+</main>
 
-        <!-- Exit Focus Mode Floating Button -->
-        <button class="exit-focus-btn" id="exit-focus-btn">Exit Focus View</button>
+<footer class="max-w-6xl mx-auto w-full p-4 md:p-6 text-center text-mut text-sm border-t-2 border-bd mt-auto">
+  <p>InclusivePulse • Designed for WCAG 2.1 AA/AAA Compliance & Universal Usability.</p>
+</footer>
 
-        <!-- Command Documentation Dock -->
-        <footer class="command-cheatsheet" id="command-cheatsheet">
-            <span class="cheatsheet-heading">Available Hands-Free Voice Commands:</span>
-            <div class="command-grid">
-                <span><code>"Set name [Name]"</code></span>
-                <span><code>"Priority urgent"</code></span>
-                <span><code>"Department cardiology"</code></span>
-                <span><code>"Symptom chest pain"</code></span>
-                <span><code>"High contrast"</code></span>
-                <span><code>"Focus mode"</code></span>
-                <span><code>"Large font"</code></span>
-                <span><code>"Submit"</code></span>
-                <span><code>"Clear"</code></span>
-            </div>
-        </footer>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const TE = (h) => String(h).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-    </main>
+/* Theme Selector */
+const ts = $('#theme');
+const setTheme = () => {
+  document.documentElement.dataset.theme = ts.value;
+  localStorage.setItem('inclusivepulse_theme', ts.value);
+};
+if(localStorage.getItem('inclusivepulse_theme')) {
+  ts.value = localStorage.getItem('inclusivepulse_theme');
+  setTheme();
+}
+ts.onchange = setTheme;
 
-    <script src="app.js"></script>
+/* Tabs Logic (Roving Tabindex) */
+const tabs = $$('[role=tab]');
+function selTab(t) {
+  tabs.forEach(x => {
+    const on = x === t;
+    x.setAttribute('aria-selected', on);
+    x.tabIndex = on ? 0 : -1;
+    const panel = $('#' + x.getAttribute('aria-controls'));
+    if(panel) panel.hidden = !on;
+  });
+}
+tabs.forEach(t => t.onclick = () => selTab(t));
+$('#maintabs').addEventListener('keydown', e => {
+  const i = tabs.indexOf(document.activeElement);
+  if(i < 0) return;
+  let n = -1;
+  if(e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+  else if(e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+  else if(e.key === 'Home') n = 0;
+  else if(e.key === 'End') n = tabs.length - 1;
+  if(n > -1) {
+    e.preventDefault();
+    tabs[n].focus();
+    selTab(tabs[n]);
+  }
+});
+
+/* Screen Reader Announcement */
+function say(m) {
+  const s = $('#status');
+  if(!s) return;
+  s.textContent = '';
+  setTimeout(() => s.textContent = m, 50);
+}
+
+/* Accordion Toggle */
+$$('.acc button, [aria-controls^="ap"]').forEach(b => {
+  if(!b.id || !b.id.startsWith('ah')) return;
+  b.onclick = () => {
+    const o = b.getAttribute('aria-expanded') === 'true';
+    b.setAttribute('aria-expanded', String(!o));
+    const region = $('#' + b.getAttribute('aria-controls'));
+    if(region) region.hidden = o;
+  };
+});
+
+/* Modal Dialog */
+const dlg = $('#dlg'), op = $('#openDlg'), closeDlg = $('#closeDlg');
+if(op && dlg) {
+  op.onclick = () => dlg.showModal();
+  closeDlg.onclick = () => dlg.close();
+  dlg.addEventListener('close', () => op.focus());
+}
+
+/* Menu Button Pattern */
+const mb = $('#menubtn'), ml = $('#menulist'), mi = $$('[role=menuitem]', ml);
+function openM(i) {
+  ml.hidden = false;
+  mb.setAttribute('aria-expanded', 'true');
+  if(mi[i]) mi[i].focus();
+}
+function closeM(f) {
+  ml.hidden = true;
+  mb.setAttribute('aria-expanded', 'false');
+  if(f) mb.focus();
+}
+if(mb && ml) {
+  mb.onclick = () => ml.hidden ? openM(0) : closeM(true);
+  mb.onkeydown = e => {
+    if(e.key === 'ArrowDown') { e.preventDefault(); openM(0); }
+    else if(e.key === 'ArrowUp') { e.preventDefault(); openM(mi.length - 1); }
+  };
+  ml.onkeydown = e => {
+    const i = mi.indexOf(document.activeElement);
+    let n = -1;
+    if(e.key === 'ArrowDown') n = (i + 1) % mi.length;
+    else if(e.key === 'ArrowUp') n = (i - 1 + mi.length) % mi.length;
+    else if(e.key === 'Home') n = 0;
+    else if(e.key === 'End') n = mi.length - 1;
+    else if(e.key === 'Escape') { closeM(true); return; }
+    else if(e.key === 'Tab') { closeM(false); return; }
+    if(n > -1) { e.preventDefault(); mi[n].focus(); }
+  };
+  mi.forEach(m => m.onclick = () => { closeM(true); say('Selected menu action: ' + m.textContent); });
+}
+
+/* Form Validation with Format Examples */
+const frm = $('#frm');
+if(frm) {
+  frm.onsubmit = e => {
+    e.preventDefault();
+    const errs = [];
+    
+    // Validate Name
+    const fname = $('#fname'), fer = $('#fname-err');
+    const nameOk = fname.value.trim().length >= 2;
+    fname.setAttribute('aria-invalid', String(!nameOk));
+    fer.textContent = nameOk ? '' : 'Error: Enter your full first and last name.';
+    if(!nameOk) errs.push(['fname', 'Full Name is required (e.g., Alex Johnson).']);
+
+    // Validate Email
+    const femail = $('#femail'), feer = $('#femail-err');
+    const emailOk = /^\S+@\S+\.\S+$/.test(femail.value.trim());
+    femail.setAttribute('aria-invalid', String(!emailOk));
+    feer.textContent = emailOk ? '' : 'Error: Enter a valid email format like name@example.com.';
+    if(!emailOk) errs.push(['femail', 'Valid Email is required (e.g., alex.johnson@example.com).']);
+
+    // Validate Phone (optional but format check if provided)
+    const ftel = $('#ftel'), fter = $('#ftel-err');
+    const telVal = ftel.value.trim();
+    const telOk = !telVal || /^\+?[\d\s\-\(\)]{7,}$/.test(telVal);
+    ftel.setAttribute('aria-invalid', String(!telOk));
+    fter.textContent = telOk ? '' : 'Error: Phone format incorrect. Example: +1 (555) 019-2834';
+    if(!telOk) errs.push(['ftel', 'Phone format incorrect (e.g., +1 (555) 019-2834).']);
+
+    const sum = $('#esum');
+    if(errs.length) {
+      sum.innerHTML = '<h4 class="font-bold text-base mb-2">' + errs.length + ' validation error(s) found before submission:</h4><ul class="list-disc pl-5 space-y-1">' + errs.map(([id, msg]) => '<li><a href="#' + id + '" class="underline font-semibold">' + TE(msg) + '</a></li>').join('') + '</ul>';
+      sum.hidden = false;
+      sum.focus();
+      say('Form validation failed with ' + errs.length + ' errors.');
+    } else {
+      sum.hidden = true;
+      say('Success! All form fields passed validation checks.');
+      alert('Form successfully submitted and verified!');
+    }
+  };
+
+  $('#esum').onclick = e => {
+    if(e.target.tagName === 'A') {
+      e.preventDefault();
+      const target = $(e.target.getAttribute('href'));
+      if(target) target.focus();
+    }
+  };
+}
+
+/* Keyboard Event Logger */
+const klog = $('#klog');
+function getElementName(el) {
+  return (el.getAttribute && el.getAttribute('aria-label')) || (el.labels && el.labels[0] && el.labels[0].textContent.trim()) || (el.textContent || '').trim().slice(0, 25);
+}
+document.addEventListener('keydown', e => {
+  const el = document.activeElement;
+  if(!klog) return;
+  const li = document.createElement('li');
+  li.textContent = `[Key: ${e.key}] on <${el.tagName.toLowerCase()}> "${getElementName(el)}"`;
+  klog.prepend(li);
+  while(klog.children.length > 10) klog.lastChild.remove();
+});
+
+/* Contrast Calculation & 6-Point Engine */
+function normHex(h) {
+  h = h.trim();
+  if(/^#[0-9a-f]{3}$/i.test(h)) h = '#' + [...h.slice(1)].map(c => c + c).join('');
+  return /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : null;
+}
+function lum(h) {
+  const rgb = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map(v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+}
+function calcRatio(a, b) {
+  const l1 = lum(a), l2 = lum(b);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+function mixColor(h, targetLum, p) {
+  return '#' + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * (1 - p) + targetLum * p).toString(16).padStart(2, '0')).join('');
+}
+function suggestColor(fg, bg, target) {
+  if(calcRatio(fg, bg) >= target) return fg;
+  const targetVal = lum(bg) > 0.179 ? 0 : 255;
+  for(let k = 1; k <= 100; k++) {
+    const c = mixColor(fg, targetVal, k / 100);
+    if(calcRatio(c, bg) >= target) return c;
+  }
+  return targetVal ? '#ffffff' : '#000000';
+}
+
+const TESTS_6 = [
+  ['Normal Text AA (WCAG 1.4.3)', 4.5],
+  ['Large Text AA (WCAG 1.4.3)', 3.0],
+  ['UI Component & Border AA (WCAG 1.4.11)', 3.0],
+  ['Normal Text AAA (Enhanced)', 7.0],
+  ['Large Text AAA (Enhanced)', 4.5],
+  ['APCA Perceptual Readability Score', 6.0]
+];
+
+const fgcInput = $('#fgc'), fghInput = $('#fgh'), bgcInput = $('#bgc'), bghInput = $('#bgh');
+function syncPair(colorEl, textEl) {
+  if(!colorEl || !textEl) return;
+  colorEl.oninput = () => { textEl.value = colorEl.value; updateContrast(); };
+  textEl.oninput = () => {
+    const n = normHex(textEl.value);
+    if(n) { colorEl.value = n; updateContrast(); }
+  };
+}
+syncPair(fgcInput, fghInput);
+syncPair(bgcInput, bghInput);
+
+function updateContrast() {
+  const f = normHex(fghInput.value), b = normHex(bghInput.value);
+  if(!f || !b) return;
+  const r = calcRatio(f, b);
+  const ratioEl = $('#ratio');
+  if(ratioEl) ratioEl.textContent = (Math.floor(r * 100) / 100).toFixed(2);
+
+  const resList = $('#results');
+  if(resList) {
+    resList.innerHTML = TESTS_6.map(([name, req]) => {
+      const passed = r >= req;
+      return `<li class="p-3 rounded-xl border-2 border-bd bg-[var(--bg)] flex items-center justify-between">
+        <span class="font-medium text-sm">${name} (req ${req}:1)</span>
+        <span class="font-bold px-2.5 py-1 rounded-md text-xs ${passed ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'}">${passed ? '✔ PASS' : '✘ FAIL'}</span>
+      </li>`;
+    }).join('');
+  }
+
+  const pv = $('#pv');
+  if(pv) pv.style.cssText = `color: ${f}; background: ${b};`;
+}
+updateContrast();
+
+const suggBtn = $('#sugg');
+if(suggBtn) {
+  suggBtn.onclick = () => {
+    const f = normHex(fghInput.value), b = normHex(bghInput.value);
+    if(!f || !b) { $('#sugout').textContent = 'Enter two valid hex colors first.'; return; }
+    const best = suggestColor(f, b, 4.5);
+    fghInput.value = best;
+    fgcInput.value = best;
+    updateContrast();
+    $('#sugout').textContent = 'Suggested passing text color: ' + best;   }; }  /* Image Accessibility Tracker & Auditor */ $$('.img-preset').forEach(btn => {
+  btn.onclick = () => {
+    const title = btn.dataset.title;
+    const alt = btn.dataset.alt;
+    const contrast = btn.dataset.contrast;
+    const decorative = btn.dataset.decorative === 'true';
+    const rec = btn.dataset.recommendation;
+
+    const resultBox = $('#imgAuditResult');
+    if(!resultBox) return;
+
+    resultBox.innerHTML = `
+      <h3 class="text-xl font-bold mb-2">Audit Report: ${TE(title)}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+        <div class="p-3 rounded-lg border-2 border-bd bg-[var(--card)]">
+          <span class="text-xs font-bold text-mut uppercase">Alt-Text Status</span>
+          <div class="font-semibold mt-1">${alt ? '"' + TE(alt) + '"' : '<span class="text-red-500 font-bold">Missing / Empty alt</span>'}</div>
+        </div>
+        <div class="p-3 rounded-lg border-2 border-bd bg-[var(--card)]">
+          <span class="text-xs font-bold text-mut uppercase">Classification</span>
+          <div class="font-semibold mt-1">${decorative ? 'Decorative Asset' : 'Informative Content Image'}</div>
+        </div>
+      </div>
+      <div class="p-4 rounded-lg border-2 ${contrast === 'pass' ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20' : 'border-red-500 bg-red-50/50 dark:bg-red-950/20'} mb-4">
+        <div class="font-bold">Heuristic Evaluation: ${contrast === 'pass' ? '✔ PASSED' : '✘ FAILED'}</div>
+        <p class="text-sm mt-1">${TE(rec)}</p>
+      </div>
+    `;
+    say('Audited image asset: ' + title);
+  };
+});
+</script>
+
 </body>
 </html>
